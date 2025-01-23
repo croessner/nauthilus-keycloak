@@ -41,33 +41,25 @@ Here is a simple yaml-blob for nauthilus.yml in a LDAP section:
 ldap:
 
   config:
-    lookup_pool_size: 8
-    lookup_idle_pool_size: 4
-
-    auth_pool_size: 16
-    auth_idle_pool_size: 5
-
+    
     server_uri: ldap://ldap.example.com:389/
     starttls: true
-    tls_skip_verify: true
-    tls_ca_cert: /etc/nauthilus/ssl/certs/yourcacert.crt
 
   search:
 
     - protocol: keycloak
-    cache_name: keycloak
-    base_dn: ou=people,dc=example,dc=com
-    filter:
-      user: |
-        (&
-          (objectClass=inetOrgPerson)
-          (uniqueIdentifier=%L{user})
-        )
-    mapping:
-      account_field: uniqueIdentifier
-    attribute:
-      - uniqueIdentifier
+      cache_name: keycloak
+      base_dn: ou=people,dc=example,dc=com
+      filter:
+        user: |
+          (&
+            (objectClass=inetOrgPerson)
+            (uniqueIdentifier=%L{user})
+          )
+      mapping:
+        account_field: uniqueIdentifier
+      attribute:
+        - uniqueIdentifier
 ```
 
 The configuration must match your settings in keycloak. I have configured a user federation with LDAP, where the settings match with the Nauthilus settings.
-
