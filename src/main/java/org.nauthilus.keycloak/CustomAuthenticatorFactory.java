@@ -1,16 +1,10 @@
 package org.nauthilus.keycloak;
 
-import org.keycloak.Config;
 import org.keycloak.authentication.Authenticator;
-import org.keycloak.authentication.AuthenticatorFactory;
-import org.keycloak.models.AuthenticationExecutionModel;
+import org.keycloak.authentication.authenticators.browser.UsernamePasswordFormFactory;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.KeycloakSessionFactory;
-import org.keycloak.provider.ProviderConfigProperty;
 
-import java.util.List;
-
-public class CustomAuthenticatorFactory implements AuthenticatorFactory {
+public class CustomAuthenticatorFactory extends UsernamePasswordFormFactory {
 
     private static final String PROVIDER_ID = "nauthilus-authenticator";
 
@@ -28,6 +22,7 @@ public class CustomAuthenticatorFactory implements AuthenticatorFactory {
     public String getHelpText() {
         return "Collects username and password from a form and forwards the request to Nauthilus.";
     }
+
     @Override
     public String getReferenceCategory() {
         return "Nauthilus connector";
@@ -36,42 +31,5 @@ public class CustomAuthenticatorFactory implements AuthenticatorFactory {
     @Override
     public Authenticator create(KeycloakSession session) {
         return new CustomAuthenticator();
-    }
-
-    @Override
-    public void init(Config.Scope scope) {
-
-    }
-
-    @Override
-    public void postInit(KeycloakSessionFactory keycloakSessionFactory) {
-
-    }
-
-    @Override
-    public boolean isConfigurable() {
-        return false;
-    }
-
-    @Override
-    public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
-        return new AuthenticationExecutionModel.Requirement[]{
-                AuthenticationExecutionModel.Requirement.REQUIRED,
-                AuthenticationExecutionModel.Requirement.DISABLED
-        };
-    }
-
-    @Override
-    public boolean isUserSetupAllowed() {
-        return false;
-    }
-
-    @Override
-    public List<ProviderConfigProperty> getConfigProperties() {
-        return null;
-    }
-
-    @Override
-    public void close() {
     }
 }

@@ -2,9 +2,8 @@ package org.nauthilus.keycloak;
 
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
-import org.keycloak.authentication.Authenticator;
 import org.jboss.logging.Logger;
-import jakarta.ws. rs.core.Response;
+import org.keycloak.authentication.authenticators.browser.UsernamePasswordForm;
 import org.keycloak.models.UserModel;
 
 import java.io.OutputStream;
@@ -12,24 +11,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Base64;
 
-public class CustomAuthenticator implements Authenticator {
+public class CustomAuthenticator extends UsernamePasswordForm {
 
     private static final Logger logger = Logger.getLogger(CustomAuthenticator.class);
     private static final String LOGIN_URL_ENV = "NAUTHILUS_LOGIN_URL";
     private static final String USERNAME_ENV = "NAUTHILUS_USERNAME";
     private static final String PASSWORD_ENV = "NAUTHILUS_PASSWORD";
-
-    @Override
-    public void authenticate(AuthenticationFlowContext context) {
-        logger.debug("authenticate() called!");
-
-        Response challenge = context.form()
-                .setAttribute("username", "")
-                .setAttribute("password", "")
-                .setError("")
-                .createLoginUsernamePassword();
-        context.challenge(challenge);
-    }
 
     @Override
     public void action(AuthenticationFlowContext context) {
@@ -133,20 +120,4 @@ public class CustomAuthenticator implements Authenticator {
     public boolean requiresUser() {
         return false;
     }
-
-    @Override
-    public boolean configuredFor(org.keycloak.models.KeycloakSession session, org.keycloak.models.RealmModel realm, org.keycloak.models.UserModel user) {
-        return true;
-    }
-
-    @Override
-    public void setRequiredActions(org.keycloak.models.KeycloakSession session, org.keycloak.models.RealmModel realm, org.keycloak.models.UserModel user) {
-        // unused
-    }
-
-    @Override
-    public void close() {
-        // unused
-    }
 }
-
