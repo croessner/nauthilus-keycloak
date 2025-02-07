@@ -1,3 +1,17 @@
+# Table of contents
+
+<!-- TOC -->
+* [Table of contents](#table-of-contents)
+* [Nauthilus authenticator for keycloak](#nauthilus-authenticator-for-keycloak)
+  * [Build](#build)
+  * [Install and configure](#install-and-configure)
+    * [Alternative 1 - Using environment variables](#alternative-1---using-environment-variables)
+    * [Alternative 2 - Keycloak](#alternative-2---keycloak)
+  * [Configure Nauthilus](#configure-nauthilus)
+<!-- TOC -->
+
+---
+
 # Nauthilus authenticator for keycloak
 
 This is a demo authenticator that replaces the default "username and password form" authenticator. It redirects
@@ -9,9 +23,13 @@ authentication attempts to Nauthilus. Upon a successful respone, an account name
 mvn clean package
 ```
 
-## Install
+---
+
+## Install and configure
 
 Copy the jar file into your keycloak environment and restart the service.
+
+### Alternative 1 - Using environment variables
 
 You must set at least one environment variable named NAUTHILUS_LOGIN_URL, which should look similar to this string:
 
@@ -26,12 +44,18 @@ NAUTHILUS_USERNAME
 NAUTHILUS_PASSWORD
 ```
 
-## Configure
+### Alternative 2 - Keycloak
+
+You can configure the Nauthilus settings from within Keycloak. Press the setting wheel next to the Nauthilus step and add your values accordingly.
+
+---
+
+## Configure Nauthilus
 
 You can find the "Nauthilus authenticator" in your flows. It replaces the default
 "Username and password form" execution step.
 
-For example copy the browser flow and replace the authenticator with the Nauthilus version.
+For example, copy the browser flow and replace the authenticator with the Nauthilus version.
 
 Nauthilus returns an account name. Keycloak must know about this user. Else the authentication step will fail.
 
