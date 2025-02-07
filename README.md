@@ -50,10 +50,12 @@ Copy the jar file into your keycloak environment and restart the service.
 
 ### Alternative 1 - Using environment variables
 
-You must set at least one environment variable named NAUTHILUS_LOGIN_URL, which should look similar to this string:
+You must set at least two environment variables called NAUTHILUS_LOGIN_URL and NAUTHILUS_PROTOCOL,
+which should look similar to these strings:
 
 ```
 NAUTHILUS_LOGIN_URL=https://login.example.com/api/v1/auth/json
+NAUTHILUS_PROTOCOL=keycloak
 ```
 
 If your Nauthilus-server requires HTTP Basic authorization, please also add these variables:

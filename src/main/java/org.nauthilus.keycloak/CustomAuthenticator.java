@@ -1,5 +1,6 @@
 package org.nauthilus.keycloak;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.jboss.logging.Logger;
@@ -10,6 +11,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CustomAuthenticator extends UsernamePasswordForm {
 
@@ -18,16 +21,25 @@ public class CustomAuthenticator extends UsernamePasswordForm {
     private static final String LOGIN_URL_ENV = "NAUTHILUS_LOGIN_URL";
     private static final String USERNAME_ENV = "NAUTHILUS_USERNAME";
     private static final String PASSWORD_ENV = "NAUTHILUS_PASSWORD";
+    private static final String KEYCLOAK_PROTOCOL_ENV = "NAUTHILUS_PROTOCOL";
+
+    private static final String DEFAULT_AUTH_SERVICE = "keycloak";
 
     @Override
     public void action(AuthenticationFlowContext context) {
-        logger.debug("action() called!");
-
         String username = context.getHttpRequest().getDecodedFormParameters().getFirst("username");
         String password = context.getHttpRequest().getDecodedFormParameters().getFirst("password");
+
         String userAgent = context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
+        String sslState = context.getHttpRequest().getHttpHeaders().getHeaderString("X-SSL");
+        String sslProtocol = context.getHttpRequest().getHttpHeaders().getHeaderString("X-SSL-Protocol");
+        String sslCipher = context.getHttpRequest().getHttpHeaders().getHeaderString("X-SSL-Cipher");
 
         logger.debug("Username: " + username);
+        logger.debug("User-Agent: " + userAgent);
+        logger.debug("SSL State: " + sslState);
+        logger.debug("SSL Protocol: " + sslProtocol);
+        logger.debug("SSL Cipher: " + sslCipher);
 
         String clientIP = context.getHttpRequest().getHttpHeaders().getHeaderString("X-Forwarded-For");
         if (clientIP == null) {
@@ -37,7 +49,8 @@ public class CustomAuthenticator extends UsernamePasswordForm {
         int clientPort = context.getConnection().getRemotePort();
 
         try {
-            boolean success = verifyNauthilusServer(context, username, password, clientIP, clientPort, userAgent);
+            boolean success = verifyNauthilusServer(
+                    context, username, password, clientIP, clientPort, userAgent, sslState, sslProtocol, sslCipher);
 
             if (success) {
                 context.success();
@@ -49,11 +62,10 @@ public class CustomAuthenticator extends UsernamePasswordForm {
         }
     }
 
-    private boolean verifyNauthilusServer(AuthenticationFlowContext context, String username, String password, String clientIP, int clientPort, String userAgent) throws Exception {
-        logger.debug("verifyNauthilusServer() called!");
-
+    private boolean verifyNauthilusServer(AuthenticationFlowContext context, String username, String password, String clientIP, int clientPort, String userAgent, String sslState, String sslCipher, String sslProtocol) throws Exception {
         URL url = new URL(getApiUrl(context));
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/json");
 
@@ -67,10 +79,28 @@ public class CustomAuthenticator extends UsernamePasswordForm {
 
         conn.setDoOutput(true);
 
-        String body = String.format(
-                "{\"username\":\"%s\",\"password\":\"%s\",\"client_ip\":\"%s\",\"client_port\":\"%d\",\"client_id\":\"%s\",\"service\":\"keycloak\",\"ssl\":\"on\"}",
-                username, password, clientIP, clientPort, userAgent
-        );
+        String effectiveSSLState = sslState != null ? sslState : "off";
+        String effectiveSSLProtocol = sslProtocol != null ? sslProtocol : "";
+        String effectiveSSLCipher = sslCipher != null ? sslCipher : "";
+        String effectiveUserAgent = userAgent != null ? userAgent : "";
+        String nauthilusProtocol = getNauthilusProtocol(context);
+
+        Map<String, String> bodyMap = new HashMap<>();
+
+        bodyMap.put("username", username);
+        bodyMap.put("password", password);
+        bodyMap.put("client_ip", clientIP);
+        bodyMap.put("client_port", String.valueOf(clientPort));
+        bodyMap.put("client_id", context.getRealm().getName());
+        bodyMap.put("service", nauthilusProtocol == null ? DEFAULT_AUTH_SERVICE : nauthilusProtocol);
+        bodyMap.put("ssl", effectiveSSLState);
+        bodyMap.put("ssl_protocol", effectiveSSLProtocol);
+        bodyMap.put("ssl_cipher", effectiveSSLCipher);
+        bodyMap.put("user_agent", effectiveUserAgent);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        String body = objectMapper.writeValueAsString(bodyMap);
 
         try (OutputStream os = conn.getOutputStream()) {
             os.write(body.getBytes());
@@ -131,6 +161,14 @@ public class CustomAuthenticator extends UsernamePasswordForm {
         }
 
         return getConfigValue(context, CustomAuthenticatorFactory.NAUTHILUS_PASSWORD);
+    }
+
+    private String getNauthilusProtocol(AuthenticationFlowContext context) {
+        if (System.getenv(KEYCLOAK_PROTOCOL_ENV) != null) {
+            return System.getenv(KEYCLOAK_PROTOCOL_ENV);
+        }
+
+        return getConfigValue(context, CustomAuthenticatorFactory.NAUTHILUS_PROTOCOL);
     }
 
     @Override

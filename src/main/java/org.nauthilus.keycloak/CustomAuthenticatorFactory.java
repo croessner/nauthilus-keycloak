@@ -17,6 +17,7 @@ public class CustomAuthenticatorFactory extends UsernamePasswordFormFactory {
     static final String NAUTHILUS_LOGIN_URL = "nauthilus_login_url";
     static final String NAUTHILUS_USERNAME = "nauthilus_username";
     static final String NAUTHILUS_PASSWORD = "nauthilus_password";
+    static final String NAUTHILUS_PROTOCOL = "nauthilus_protocol";
 
     @Override
     public boolean isConfigurable() {
@@ -72,6 +73,13 @@ public class CustomAuthenticatorFactory extends UsernamePasswordFormFactory {
         password.setLabel("Nauthilus password");
         password.setHelpText("The optional password for authenticating with the Nauthilus instance.");
         configProperties.add(password);
+
+        ProviderConfigProperty keycloakProtocol = new ProviderConfigProperty();
+        keycloakProtocol.setType(STRING_TYPE);
+        keycloakProtocol.setName(NAUTHILUS_PROTOCOL);
+        keycloakProtocol.setLabel("Nauthilus protocol");
+        keycloakProtocol.setHelpText("Nauthilus protocol name for this instance, i.e. keycloak.");
+        configProperties.add(keycloakProtocol);
 
         return configProperties;
     }
