@@ -3,6 +3,7 @@
 <!-- TOC -->
 * [Table of contents](#table-of-contents)
 * [Nauthilus authenticator for keycloak](#nauthilus-authenticator-for-keycloak)
+* [Authentication flow](#authentication-flow)
   * [Build](#build)
   * [Install and configure](#install-and-configure)
     * [Alternative 1 - Using environment variables](#alternative-1---using-environment-variables)
@@ -17,6 +18,24 @@
 This is a demo authenticator that replaces the default "username and password form" authenticator. It redirects
 authentication attempts to Nauthilus. Upon a successful respone, an account name is returned to Keycloak, which must match an already known user on the system.
 
+# Authentication flow
+
+```mermaid
+sequenceDiagram
+    participant User as User
+    participant LoginPage as Login Page Keycloak
+    participant Nauthilus as Nauthilus backend
+
+    User ->> LoginPage: Open the login page
+    User ->> LoginPage: Enter credentials
+    LoginPage ->> Nauthilus: Forward authentication request
+    Nauthilus -->> LoginPage: Return response
+    alt Successful Authentication
+        LoginPage ->> User: Proceed with username
+    else Failed Authentication
+        LoginPage ->> User: Authentication failed
+    end
+```
 ## Build
 
 ```shell
