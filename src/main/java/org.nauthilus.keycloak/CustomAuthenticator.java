@@ -14,6 +14,7 @@ import java.util.Base64;
 public class CustomAuthenticator extends UsernamePasswordForm {
 
     private static final Logger logger = Logger.getLogger(CustomAuthenticator.class);
+
     private static final String LOGIN_URL_ENV = "NAUTHILUS_LOGIN_URL";
     private static final String USERNAME_ENV = "NAUTHILUS_USERNAME";
     private static final String PASSWORD_ENV = "NAUTHILUS_PASSWORD";
@@ -51,13 +52,13 @@ public class CustomAuthenticator extends UsernamePasswordForm {
     private boolean verifyNauthilusServer(AuthenticationFlowContext context, String username, String password, String clientIP, int clientPort, String userAgent) throws Exception {
         logger.debug("verifyNauthilusServer() called!");
 
-        URL url = new URL(getApiUrl());
+        URL url = new URL(getApiUrl(context));
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/json");
 
-        String baUsername = getUsername();
-        String baPassword = getPassword();
+        String baUsername = getUsername(context);
+        String baPassword = getPassword(context);
 
         if (baUsername != null && baPassword != null) {
             String basicAuth = "Basic " + Base64.getEncoder().encodeToString((baUsername + ":" + baPassword).getBytes());
@@ -104,16 +105,32 @@ public class CustomAuthenticator extends UsernamePasswordForm {
         return false;
     }
 
-    private String getApiUrl() {
-        return System.getenv(LOGIN_URL_ENV);
+    private static String getConfigValue(AuthenticationFlowContext context, String key) {
+        return context.getAuthenticatorConfig().getConfig().get(key);
     }
 
-    private String getUsername() {
-        return System.getenv(USERNAME_ENV);
+    private String getApiUrl(AuthenticationFlowContext context) {
+        if (System.getenv(LOGIN_URL_ENV) != null) {
+            return System.getenv(LOGIN_URL_ENV);
+        }
+
+        return getConfigValue(context, CustomAuthenticatorFactory.NAUTHILUS_LOGIN_URL);
     }
 
-    private String getPassword() {
-        return System.getenv(PASSWORD_ENV);
+    private String getUsername(AuthenticationFlowContext context) {
+        if (System.getenv(USERNAME_ENV) != null) {
+            return System.getenv(USERNAME_ENV);
+        }
+
+        return getConfigValue(context, CustomAuthenticatorFactory.NAUTHILUS_USERNAME);
+    }
+
+    private String getPassword(AuthenticationFlowContext context) {
+        if (System.getenv(PASSWORD_ENV) != null) {
+            return System.getenv(PASSWORD_ENV);
+        }
+
+        return getConfigValue(context, CustomAuthenticatorFactory.NAUTHILUS_PASSWORD);
     }
 
     @Override
