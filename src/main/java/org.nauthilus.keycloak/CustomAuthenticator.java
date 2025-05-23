@@ -35,11 +35,14 @@ public class CustomAuthenticator extends UsernamePasswordForm {
         String sslProtocol = context.getHttpRequest().getHttpHeaders().getHeaderString("X-SSL-Protocol");
         String sslCipher = context.getHttpRequest().getHttpHeaders().getHeaderString("X-SSL-Cipher");
 
+        String oidcClientId = context.getAuthenticationSession().getClient().getClientId();
+
         logger.debug("Username: " + username);
         logger.debug("User-Agent: " + userAgent);
         logger.debug("SSL State: " + sslState);
         logger.debug("SSL Protocol: " + sslProtocol);
         logger.debug("SSL Cipher: " + sslCipher);
+        logger.debug("OIDC Client ID: " + oidcClientId);
 
         String clientIP = context.getHttpRequest().getHttpHeaders().getHeaderString("X-Forwarded-For");
         if (clientIP == null) {
@@ -50,7 +53,7 @@ public class CustomAuthenticator extends UsernamePasswordForm {
 
         try {
             boolean success = verifyNauthilusServer(
-                    context, username, password, clientIP, clientPort, userAgent, sslState, sslProtocol, sslCipher);
+                    context, username, password, clientIP, clientPort, userAgent, sslState, sslProtocol, sslCipher, oidcClientId);
 
             if (success) {
                 context.success();
@@ -62,7 +65,7 @@ public class CustomAuthenticator extends UsernamePasswordForm {
         }
     }
 
-    private boolean verifyNauthilusServer(AuthenticationFlowContext context, String username, String password, String clientIP, int clientPort, String userAgent, String sslState, String sslCipher, String sslProtocol) throws Exception {
+    private boolean verifyNauthilusServer(AuthenticationFlowContext context, String username, String password, String clientIP, int clientPort, String userAgent, String sslState, String sslCipher, String sslProtocol, String oidcClientId) throws Exception {
         URL url = new URL(getApiUrl(context));
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
@@ -97,6 +100,7 @@ public class CustomAuthenticator extends UsernamePasswordForm {
         bodyMap.put("ssl_protocol", effectiveSSLProtocol);
         bodyMap.put("ssl_cipher", effectiveSSLCipher);
         bodyMap.put("user_agent", effectiveUserAgent);
+        bodyMap.put("oidc_cid", oidcClientId);
 
         ObjectMapper objectMapper = new ObjectMapper();
 
